@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from subprocess import Popen, PIPE
+import os # for writing to folder.
 import trparse.trparse as trp
 
 # @see http://softwaredevelopment.gr/1074/traceroute-system-call-in-python/
@@ -73,8 +74,14 @@ class TraceroutePrinter(object):
     super(TraceroutePrinter, self).__init__()
 
   @staticmethod
+  def ensureDataFolderExists():
+    if not os.access('./data', os.F_OK):
+      os.makedirs('./data')
+
+  @staticmethod
   def printDataToFile(parser, dest):
-    with open(dest + ".txt", 'w') as file:
+    TraceroutePrinter.ensureDataFolderExists()
+    with open('data/' + dest + ".txt", 'w') as file:
       print >> file, parser.error_condition()
       print >> file, "\n".join(parser.ip_list())
       print >> file, str(parser.total_time()) + " ms"   
