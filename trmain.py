@@ -33,9 +33,15 @@ class RouteParser(object):
     return self._route
   @route.setter
   def route(self, value):
-    print value
+    # print value
     self._route = trp.loads(value)
   
+  def error_condition(self):
+    for hop in self.route.hops:
+      for probe in hop.probes:
+        if probe.anno:
+          return probe.anno
+    return "success"
 
   def total_time(self):
     """
@@ -82,7 +88,8 @@ class TracerouteProcessor(object):
     try:
       self.parser.route = route
     except:
-      return
+      return # Typically, this signifies a failed routing. Fail silently, move on.
+    print self.parser.error_condition()
     print self.parser.ip_list()
     print self.parser.total_time()
 
