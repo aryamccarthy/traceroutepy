@@ -79,7 +79,10 @@ class TracerouteProcessor(object):
     # We do this next step instead of making a new parser
     # for performance reasons: if we process millions of IPs,
     # we'd be making millions of parser objects. 
-    self.parser.route = route
+    try:
+      self.parser.route = route
+    except:
+      return
     print self.parser.ip_list()
     print self.parser.total_time()
 
@@ -89,7 +92,7 @@ class TracerouteProcessor(object):
 
 def main():
   processor = TracerouteProcessor()
-  processor.process_ip_list(["8.8.8.8"])
+  processor.process_ip_list(["8.8.8.8", "127.000.000.257"])
 
 if __name__ == '__main__':
   main()
