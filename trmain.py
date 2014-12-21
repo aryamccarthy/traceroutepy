@@ -24,9 +24,18 @@ class RouteParser(object):
   This class adapts the trparse package into a common interface.
   """
 
-  def __init__(self, route):
+  def __init__(self):
     super(RouteParser, self).__init__()
-    self._route = trp.loads(route)
+
+  @property
+  def route(self):
+    """Returns the route AST the parser is currently processing."""
+    return self._route
+  @route.setter
+  def route(self, value):
+    print value
+    self._route = trp.loads(value)
+  
 
   def total_time(self):
     """
@@ -37,19 +46,50 @@ class RouteParser(object):
     """
     # Uncomment for debugging.
     # print [[probe.rtt for probe in hop.probes] for hop in self._route.hops]
-    return sum([max([probe.rtt for probe in hop.probes]) for hop in self._route.hops])
+    return sum([max([probe.rtt for probe in hop.probes]) for hop in self.route.hops])
 
-  def all_stops(self):
-    pass
-    
+  def ip_list(self):
+    """
+    Get all IPs along the way.
+    """
+    # Hops themselves don't contain an IP address.
+    # Still, each probe should have the same IP address.
+    # That means, we could get the IP of any probe to represent its hop.
+    return [hop.probes[0].ip for hop in self.route.hops]
 
-#def parse_route(route):
-#  duration = max([[[probe.rtt for probe in hop.probes] for hop in route.]])
+class TracerouteProcessor(object):
+  """docstring for TracerouteProcessor"""
+  def __init__(self):
+    super(TracerouteProcessor, self).__init__()
+
+  @property
+  def parser(self):
+    try:
+      return self._parser
+    except:
+      self._parser = RouteParser() # Lazy instantiation.
+      return self._parser
+  @parser.setter
+  def parser(self, value):
+      self._parser = value
+  
+  
+  def process_ip(self, ip_address):
+    route = get_route(ip_address)
+    # We do this next step instead of making a new parser
+    # for performance reasons: if we process millions of IPs,
+    # we'd be making millions of parser objects. 
+    self.parser.route = route
+    print self.parser.ip_list()
+    print self.parser.total_time()
+
+  def process_ip_list(self, ip_list):
+    for ip in ip_list:
+      self.process_ip(ip)
 
 def main():
-  route = get_route("8.8.8.8")
-  parser = RouteParser(route)
-  print parser.total_time()
+  processor = TracerouteProcessor()
+  processor.process_ip_list(["8.8.8.8"])
 
 if __name__ == '__main__':
   main()
