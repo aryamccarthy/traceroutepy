@@ -1,0 +1,3 @@
+[submodule "trparse"]
+	path = trparse
+	url = https://github.com/lbenitez000/trparse
