@@ -19,6 +19,8 @@ def get_route(ip_address):
 
   return output
 
+
+
 class RouteParser(object):
   """
   This class adapts the trparse package into a common interface.
@@ -63,6 +65,21 @@ class RouteParser(object):
     # That means, we could get the IP of any probe to represent its hop.
     return [hop.probes[0].ip for hop in self.route.hops]
 
+
+
+class TraceroutePrinter(object):
+  """docstring for TraceroutePrinter"""
+  def __init__(self):
+    super(TraceroutePrinter, self).__init__()
+
+  @staticmethod
+  def printDataToFile(parser, dest):
+    with open(dest + ".txt", 'w') as file:
+      print >> file, parser.error_condition()
+      print >> file, "\n".join(parser.ip_list())
+      print >> file, str(parser.total_time()) + " ms"   
+
+
 class TracerouteProcessor(object):
   """docstring for TracerouteProcessor"""
   def __init__(self):
@@ -79,6 +96,16 @@ class TracerouteProcessor(object):
   def parser(self, value):
       self._parser = value
   
+  @property
+  def printer(self):
+    try:
+      return self._printer
+    except:
+      self._printer = TraceroutePrinter()
+      return self._printer
+  @printer.setter
+  def printer(self, value):
+      self._printer = value
   
   def process_ip(self, ip_address):
     route = get_route(ip_address)
@@ -89,13 +116,13 @@ class TracerouteProcessor(object):
       self.parser.route = route
     except:
       return # Typically, this signifies a failed routing. Fail silently, move on.
-    print self.parser.error_condition()
-    print self.parser.ip_list()
-    print self.parser.total_time()
+    self.printer.printDataToFile(self.parser, ip_address)
 
   def process_ip_list(self, ip_list):
     for ip in ip_list:
       self.process_ip(ip)
+
+
 
 def main():
   processor = TracerouteProcessor()
