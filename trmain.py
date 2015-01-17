@@ -2,11 +2,17 @@
 
 from subprocess import Popen, PIPE
 import os # for writing to folder.
+
+import netaddr # If this doesn't exist, run 'sudo pip install netaddr'.
+
+import re # For cleaning things.
+
 import trparse.trparse as trp
+
 
 # @see http://softwaredevelopment.gr/1074/traceroute-system-call-in-python/
 def get_route(ip_address):
-  p = Popen(['traceroute', ip_address], stdout=PIPE)
+  p = Popen(['traceroute', str(ip_address)], stdout=PIPE)
   output = ""
 
   while True:
@@ -17,8 +23,17 @@ def get_route(ip_address):
       output += line
     except:
       break
-
+  # Weird preprocessing thing for when outside the US.
+  output = re.sub(r".in-addr.arpa", r"", output)
   return output
+
+
+
+def IPAddress(x):
+  try:
+    return netaddr.IPAddress(x)
+  except Exception, e:
+    raise e
 
 
 
@@ -36,7 +51,6 @@ class RouteParser(object):
     return self._route
   @route.setter
   def route(self, value):
-    # print value
     self._route = trp.loads(value)
   
   def error_condition(self):
@@ -79,9 +93,9 @@ class TraceroutePrinter(object):
       os.makedirs('./data')
 
   @staticmethod
-  def printDataToFile(parser, dest):
+  def printDataToFile(parser, dest_ip):
     TraceroutePrinter.ensureDataFolderExists()
-    with open('data/' + dest + ".txt", 'w') as file:
+    with open('data/' + str(dest_ip) + ".txt", 'w') as file:
       print >> file, parser.error_condition()
       print >> file, "\n".join(parser.ip_list())
       print >> file, str(parser.total_time()) + " ms"   
@@ -121,7 +135,8 @@ class TracerouteProcessor(object):
     # we'd be making millions of parser objects. 
     try:
       self.parser.route = route
-    except:
+    except Exception, e:
+      print ' '.join(['trparse:', str(e)])
       return # Typically, this signifies a failed routing. Fail silently, move on.
     self.printer.printDataToFile(self.parser, ip_address)
 
@@ -133,7 +148,7 @@ class TracerouteProcessor(object):
 
 def main():
   processor = TracerouteProcessor()
-  processor.process_ip_list(["8.8.8.8", "127.000.000.257"])
+  processor.process_ip_list(IPAddress(x) for x in ["8.8.8.8", "127.000.000.1"])
 
 if __name__ == '__main__':
   main()
