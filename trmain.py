@@ -146,9 +146,14 @@ class TracerouteProcessor(object):
 
 
 
+def make_ip_list(lst):
+  return [IPAddress(x) for x in lst]
+
+
+
 def main():
   processor = TracerouteProcessor()
-  processor.process_ip_list(IPAddress(x) for x in ["8.8.8.8", "127.000.000.1"])
+  processor.process_ip_list(make_ip_list(["8.8.8.8", "127.000.000.1"]))
 
 if __name__ == '__main__':
   main()
